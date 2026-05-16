@@ -3,53 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>KHQR Premium Payment - Bakong</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Bakong Secure Checkout | Ecomerc Shop</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #E30613;
-            --primary-dark: #b3050f;
-            --bg: #0f172a;
+            --primary: #00e5ff;
+            --secondary: #007bff;
+            --bg: #0a0e17;
             --card-bg: rgba(255, 255, 255, 0.05);
-            --text: #f8fafc;
-            --text-muted: #94a3b8;
-            --success: #22c55e;
-            --pending: #eab308;
+            --text: #ffffff;
+            --text-dim: #a0a0a0;
+            --success: #00c853;
         }
 
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background: radial-gradient(circle at top right, #1e293b, #0f172a);
+            background-color: var(--bg);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 229, 255, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(0, 123, 255, 0.05) 0%, transparent 40%);
             color: var(--text);
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             overflow-x: hidden;
         }
 
         .container {
             width: 100%;
-            max-width: 420px;
+            max-width: 450px;
             padding: 20px;
-            perspective: 1000px;
-        }
-
-        .card {
-            background: var(--card-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 24px;
-            padding: 40px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             animation: fadeIn 0.8s ease-out;
         }
 
@@ -58,278 +48,314 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .header {
+        .checkout-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
             text-align: center;
+        }
+
+        .logo-area {
             margin-bottom: 30px;
         }
 
-        .logo {
-            font-size: 48px;
-            margin-bottom: 10px;
-            display: block;
-        }
-
-        h1 {
+        .logo-area h1 {
             font-size: 24px;
-            font-weight: 600;
-            background: linear-gradient(to right, #fff, #94a3b8);
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
+        .logo-area p {
+            color: var(--text-dim);
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 25px;
+            text-align: left;
         }
 
         label {
             display: block;
-            font-size: 14px;
-            color: var(--text-muted);
+            font-size: 13px;
+            color: var(--text-dim);
             margin-bottom: 8px;
-            margin-left: 4px;
+            margin-left: 5px;
         }
 
-        .input-wrapper {
-            position: relative;
-        }
-
-        input, select {
+        input {
             width: 100%;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 14px 16px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 15px 20px;
             color: white;
             font-size: 16px;
-            outline: none;
             transition: all 0.3s;
         }
 
-        input:focus, select:focus {
+        input:focus {
+            outline: none;
             border-color: var(--primary);
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 0 4px rgba(227, 6, 19, 0.2);
+            background: rgba(255,255,255,0.06);
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
         }
 
-        button {
-            width: 100%;
-            background: var(--primary);
-            color: white;
-            border: none;
+        .currency-toggle {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            background: rgba(255,255,255,0.03);
+            padding: 5px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+        }
+
+        .toggle-btn {
+            padding: 12px;
             border-radius: 12px;
-            padding: 16px;
-            font-size: 16px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            cursor: pointer;
             font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn.active {
+            background: var(--primary);
+            color: var(--bg);
+            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.3);
+        }
+
+        .pay-btn {
+            width: 100%;
+            background: linear-gradient(45deg, var(--secondary), var(--primary));
+            border: none;
+            border-radius: 15px;
+            padding: 18px;
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
             cursor: pointer;
             transition: all 0.3s;
             margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(227, 6, 19, 0.3);
         }
 
-        button:hover {
-            background: var(--primary-dark);
+        .pay-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(227, 6, 19, 0.4);
+            box-shadow: 0 10px 20px rgba(0, 229, 255, 0.3);
         }
 
-        button:active {
-            transform: translateY(0);
-        }
-
-        #qrSection {
+        .qr-section {
             display: none;
-            text-align: center;
-            margin-top: 30px;
-            animation: slideUp 0.5s ease-out;
+            margin-top: 20px;
+            animation: zoomIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes zoomIn {
+            from { opacity: 0; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         .qr-container {
             background: white;
-            padding: 15px;
+            padding: 20px;
             border-radius: 20px;
-            display: inline-block;
-            margin-bottom: 20px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-        }
-
-        #qrImage {
+            margin: 20px auto;
             width: 220px;
             height: 220px;
-            display: block;
+        }
+
+        .qr-container img {
+            width: 100%;
+            height: 100%;
         }
 
         .status-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 8px 16px;
-            border-radius: 100px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-
-        .status-pending {
-            background: rgba(234, 179, 8, 0.1);
-            color: var(--pending);
-            border: 1px solid rgba(234, 179, 8, 0.2);
-        }
-
-        .status-success {
-            background: rgba(34, 197, 94, 0.1);
-            color: var(--success);
-            border: 1px solid rgba(34, 197, 94, 0.2);
-        }
-
-        .ref-text {
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 20px;
             font-size: 12px;
-            color: var(--text-muted);
-            letter-spacing: 0.5px;
+            font-weight: 700;
+            margin-top: 10px;
+            text-transform: uppercase;
         }
 
-        /* Loading Spinner */
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid currentColor;
-            border-bottom-color: transparent;
+        .status-pending { background: rgba(255, 193, 7, 0.1); color: #ffc107; border: 1px solid rgba(255,193,7,0.2); }
+        .status-success { background: rgba(0, 200, 83, 0.1); color: var(--success); border: 1px solid rgba(0,200,83,0.2); }
+
+        .back-link {
+            display: block;
+            margin-top: 20px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .back-link:hover { color: var(--primary); }
+
+        .loader {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-top-color: white;
             border-radius: 50%;
             display: inline-block;
-            animation: rotation 1s linear infinite;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
         }
 
-        @keyframes rotation {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="card" id="paymentCard">
-            <div class="header">
-                <span class="logo">🇰🇭</span>
-                <h1>KHQR Payment</h1>
-                <p style="color: var(--text-muted); font-size: 14px; margin-top: 5px;">Secure Bakong Payment Integration</p>
+        <div class="checkout-card">
+            <!-- Header -->
+            <div class="logo-area">
+                <h1>BAKONG SECURE</h1>
+                <p>Ecomerc Shop Gateway</p>
             </div>
 
-            <div id="setupSection">
+            <!-- Input Phase -->
+            <div id="input-phase">
+                <div class="currency-toggle">
+                    <button class="toggle-btn active" onclick="setCurrency('USD')">USD</button>
+                    <button class="toggle-btn" onclick="setCurrency('KHR')">KHR</button>
+                </div>
+
                 <div class="form-group">
-                    <label for="amount">Payment Amount</label>
-                    <div class="input-wrapper">
-                        <input type="number" id="amount" placeholder="0.00" step="0.01">
+                    <label>Amount to Pay</label>
+                    <input type="number" id="amount" placeholder="0.00" value="1.00">
+                </div>
+
+                <div class="form-group">
+                    <label>Customer Name</label>
+                    <input type="text" id="customer-name" placeholder="John Doe">
+                </div>
+
+                <button class="pay-btn" onclick="generateQR()" id="pay-btn">GENERATE QR CODE</button>
+            </div>
+
+            <!-- QR Phase -->
+            <div id="qr-phase" class="qr-section">
+                <p style="font-size: 14px; color: var(--text-dim);">Scan with Bakong or any Bank App</p>
+                <div class="qr-container">
+                    <img id="qr-image" src="" alt="Payment QR">
+                </div>
+                <div id="status-container">
+                    <div class="status-badge status-pending">
+                        <span class="loader"></span> Awaiting Payment...
                     </div>
                 </div>
-
-                <div class="form-group">
-                    <label for="currency">Currency</label>
-                    <select id="currency">
-                        <option value="USD">USD - US Dollar</option>
-                        <option value="KHR">KHR - Khmer Riel</option>
-                    </select>
-                </div>
-
-                <button id="generateBtn" onclick="generateQR()">Generate QR Code</button>
-            </div>
-
-            <div id="qrSection">
-                <div class="status-badge status-pending" id="statusBadge">
-                    <span class="spinner"></span>
-                    <span id="statusText">Waiting for payment...</span>
-                </div>
-                
-                <div class="qr-container">
-                    <img id="qrImage" alt="KHQR Code">
-                </div>
-                
-                <p class="ref-text" id="transactionId">Ref: --</p>
-                
-                <button style="background: rgba(255,255,255,0.05); color: var(--text-muted); margin-top: 20px; box-shadow: none;" onclick="resetForm()">
-                    Cancel Transaction
-                </button>
+                <a href="#" class="back-link" onclick="resetUI()">Cancel Transaction</a>
             </div>
         </div>
     </div>
 
     <script>
-        let pollingInterval;
-        let currentTxnId;
+        let currentCurrency = 'USD';
+        let pollingInterval = null;
+        let activeTransactionId = null;
+
+        function setCurrency(curr) {
+            currentCurrency = curr;
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.innerText === curr);
+            });
+            document.getElementById('amount').placeholder = curr === 'USD' ? '0.00' : '0';
+        }
 
         async function generateQR() {
             const amount = document.getElementById('amount').value;
-            const currency = document.getElementById('currency').value;
-            const btn = document.getElementById('generateBtn');
+            const name = document.getElementById('customer-name').value;
+            const btn = document.getElementById('pay-btn');
 
             if (!amount || amount <= 0) {
                 alert('Please enter a valid amount');
                 return;
             }
 
+            btn.innerHTML = '<span class="loader"></span> CREATING...';
             btn.disabled = true;
-            btn.innerHTML = '<span class="spinner"></span> Generating...';
 
             try {
-                const res = await fetch('/api/payment/generate-qr', {
+                const response = await fetch('/api/payment/generate-qr', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount: parseFloat(amount), currency })
+                    body: JSON.stringify({
+                        amount: parseFloat(amount),
+                        currency: currentCurrency,
+                        customerName: name || 'Guest Customer',
+                        orderId: 'ORD-' + Date.now()
+                    })
                 });
 
-                if (!res.ok) throw new Error('Failed to generate QR');
-
-                const data = await res.json();
-                currentTxnId = data.transactionId;
-
-                // Update UI
-                document.getElementById('qrImage').src = data.qrImageBase64;
-                document.getElementById('transactionId').innerText = 'Reference: ' + data.transactionId;
+                const data = await response.json();
                 
-                document.getElementById('setupSection').style.display = 'none';
-                document.getElementById('qrSection').style.display = 'block';
-
-                // Start polling every 3 seconds
-                pollingInterval = setInterval(checkStatus, 3000);
-            } catch (err) {
-                alert('Error: ' + err.message);
-                btn.disabled = false;
-                btn.innerText = 'Generate QR Code';
-            }
-        }
-
-        async function checkStatus() {
-            try {
-                const res = await fetch('/api/payment/check-status/' + currentTxnId);
-                const data = await res.json();
-
-                if (data.status === 'SUCCESS') {
-                    clearInterval(pollingInterval);
-                    const badge = document.getElementById('statusBadge');
-                    badge.className = 'status-badge status-success';
-                    badge.innerHTML = '<span>✅</span> <span>Payment Successful!</span>';
-                    
-                    // Add success animation to card
-                    document.getElementById('paymentCard').style.transform = 'scale(1.02)';
-                    setTimeout(() => {
-                        document.getElementById('paymentCard').style.transform = 'scale(1)';
-                    }, 500);
+                if (data.qrImage) {
+                    document.getElementById('qr-image').src = 'data:image/png;base64,' + data.qrImage;
+                    document.getElementById('input-phase').style.display = 'none';
+                    document.getElementById('qr-phase').style.display = 'block';
+                    activeTransactionId = data.transactionId;
+                    startPolling(data.transactionId);
                 }
             } catch (err) {
-                console.error('Status check failed', err);
+                console.error(err);
+                alert('Failed to connect to server. Check if backend is running.');
+            } finally {
+                btn.innerHTML = 'GENERATE QR CODE';
+                btn.disabled = false;
             }
         }
 
-        function resetForm() {
-            clearInterval(pollingInterval);
-            document.getElementById('setupSection').style.display = 'block';
-            document.getElementById('qrSection').style.display = 'none';
-            document.getElementById('generateBtn').disabled = false;
-            document.getElementById('generateBtn').innerText = 'Generate QR Code';
-            document.getElementById('amount').value = '';
+        function startPolling(id) {
+            if (pollingInterval) clearInterval(pollingInterval);
+            pollingInterval = setInterval(async () => {
+                try {
+                    const response = await fetch(`/api/payment/transactions/${id}`);
+                    const data = await response.json();
+                    
+                    if (data.status === 'SUCCESS' || data.status === 'PAID') {
+                        showSuccess();
+                        clearInterval(pollingInterval);
+                    }
+                } catch (err) {
+                    console.error('Polling error', err);
+                }
+            }, 3000);
+        }
+
+        function showSuccess() {
+            const container = document.getElementById('status-container');
+            container.innerHTML = `
+                <div class="status-badge status-success">
+                    ✅ Payment Received Successfully
+                </div>
+                <div style="margin-top: 20px; color: var(--success); font-weight: 600;">
+                    Thank you for your purchase!
+                </div>
+            `;
+            // Redirect or show final receipt after 3 seconds
+            setTimeout(() => {
+                window.location.reload();
+            }, 5000);
+        }
+
+        function resetUI() {
+            if (pollingInterval) clearInterval(pollingInterval);
+            document.getElementById('input-phase').style.display = 'block';
+            document.getElementById('qr-phase').style.display = 'none';
         }
     </script>
 </body>

@@ -37,6 +37,16 @@ public class PaymentController {
     @Autowired
     private BakongApiService bakongApiService;
 
+    // ✅ QR Info Endpoint
+    @GetMapping("/qr-info")
+    public ResponseEntity<?> getQRInfo() {
+        return ResponseEntity.ok(Map.of(
+            "amount", 0,           // ← 0 means user enters it themselves
+            "currency", "USD",     // ← Default currency
+            "isAmountFixed", false // ← Allow editing!
+        ));
+    }
+
     @PostMapping("/generate-qr")
     public ResponseEntity<PaymentResponse> generateQr(@RequestBody PaymentRequest request) {
         try {
@@ -87,42 +97,64 @@ public class PaymentController {
     // 3️⃣ Bakong Webhook → Update DB
     @PostMapping("/callback")
     public ResponseEntity<String> handleCallback(@RequestBody Map<String, Object> payload) {
-        log.info("Received Bakong Callback: {}", payload);
+        log.info("Received Bakong Callback Payload: {}", payload);
 
         try {
-            // Bakong sometimes nests data in a "data" object
-            Map<String, Object> data = payload;
-            if (payload.containsKey("data") && payload.get("data") instanceof Map) {
-                data = (Map<String, Object>) payload.get("data");
-            }
-
-            // Extract externalRef (using safer String.valueOf to avoid ClassCastException)
-            Object externalRefObj = data.getOrDefault("externalRef", data.get("external_ref"));
-            String transactionId = externalRefObj != null ? String.valueOf(externalRefObj) : null;
-            
-            Object statusObj = data.get("status");
-            String status = statusObj != null ? String.valueOf(statusObj) : null;
+            // 1. Use Deep Search to find the Transaction ID
+            String transactionId = deepSearchValue(payload, List.of("externalRef", "external_ref", "externalReference", "billNumber", "bill_number", "orderId", "order_id"));
 
             if (transactionId == null) {
-                log.warn("Callback received without externalRef. Payload: {}", payload);
-                return ResponseEntity.badRequest().body("Error: Missing externalRef in payload");
+                log.error("CRITICAL: Callback received but Transaction ID (externalRef) is missing from ANY field! Payload: {}", payload);
+                return ResponseEntity.badRequest().body("Error: Transaction ID not found in payload structure.");
             }
 
-            if ("SUCCESS".equalsIgnoreCase(status)) {
+            // 2. Use Deep Search to find the Status
+            String statusValue = deepSearchValue(payload, List.of("status", "transactionStatus", "paymentStatus"));
+            String status = (statusValue != null) ? statusValue.toUpperCase() : "FAILED";
+
+            log.info("Processing Callback for Transaction: {} with Status: {}", transactionId, status);
+
+            if ("SUCCESS".equals(status) || "COMPLETED".equals(status)) {
                 transactionService.markAsSuccess(transactionId);
-                log.info("Successfully processed SUCCESS callback for transaction: {}", transactionId);
+                return ResponseEntity.ok("Callback Processed: SUCCESS");
             } else {
                 transactionService.markAsFailed(transactionId);
-                log.info("Processed FAILED/OTHER callback for transaction: {} (Status: {})", transactionId, status);
+                return ResponseEntity.ok("Callback Processed: " + status);
             }
 
-            return ResponseEntity.ok("Callback Processed Successfully");
-
         } catch (Exception e) {
-            log.error("Fatal error during Bakong callback processing", e);
-            // Return 200 with error details to avoid infinite retries from webhook provider
-            return ResponseEntity.ok("Warning: Callback received but processing failed: " + e.getMessage());
+            log.error("Fatal error during callback processing", e);
+            return ResponseEntity.ok("Error handled: " + e.getMessage());
         }
+    }
+
+    // Recursive helper to find a value by multiple possible keys in a nested map
+    private String deepSearchValue(Object source, List<String> targetKeys) {
+        if (source instanceof Map) {
+            Map<String, Object> map = (Map<String, Object>) source;
+            
+            // Try to find key at current level
+            for (String key : targetKeys) {
+                for (String actualKey : map.keySet()) {
+                    if (actualKey.equalsIgnoreCase(key)) {
+                        return String.valueOf(map.get(actualKey));
+                    }
+                }
+            }
+
+            // If not found, go deeper into nested maps
+            for (Object value : map.values()) {
+                String found = deepSearchValue(value, targetKeys);
+                if (found != null) return found;
+            }
+        } else if (source instanceof List) {
+            List<?> list = (List<?>) source;
+            for (Object item : list) {
+                String found = deepSearchValue(item, targetKeys);
+                if (found != null) return found;
+            }
+        }
+        return null;
     }
 
     // 4️⃣ Get All Transactions (admin view)
@@ -137,5 +169,15 @@ public class PaymentController {
         return transactionService.getTransaction(transactionId)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    // Helper to find one of multiple keys in a map
+    private String findValueInMap(Map<String, Object> map, String... keys) {
+        for (String key : keys) {
+            if (map.containsKey(key) && map.get(key) != null) {
+                return String.valueOf(map.get(key));
+            }
+        }
+        return null;
     }
 }

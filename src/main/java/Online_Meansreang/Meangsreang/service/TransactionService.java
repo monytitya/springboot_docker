@@ -20,13 +20,34 @@ public class TransactionService {
     private TransactionRepository transactionRepository;
 
     // Save new transaction when QR is generated
-    public Transaction createTransaction(String transactionId, double amount,
+    public Transaction createTransaction(String transactionId, Double amount,
                                           String currency, String qrString,
                                           String customerName, String email, String phone) {
+        
+        // ✅ 1. Validate Currency
+        String upperCurrency = currency != null ? currency.toUpperCase() : "USD";
+        if (!upperCurrency.equals("USD") && !upperCurrency.equals("KHR")) {
+            throw new RuntimeException("Currency ត្រូវតែជា USD ឬ KHR!");
+        }
+
+        // ✅ 2. Validate Amount
+        // Allow amount = 0 for "Unlocked" QRs
+        double inputAmount = amount != null ? amount : 0.0;
+        if (inputAmount < 0) {
+            throw new RuntimeException("Amount មិនអាចតិចជាង 0 ទេ!");
+        }
+
+        // ✅ 3. Auto Convert KHR → USD (Example rate 4100)
+        double finalAmount = inputAmount;
+        if (upperCurrency.equals("KHR") && inputAmount > 0) {
+            // If you want to store everything in USD internally
+            finalAmount = inputAmount / 4100.0;
+        }
+
         Transaction transaction = Transaction.builder()
                 .transactionId(transactionId)
-                .amount(amount)
-                .currency(currency)
+                .amount(finalAmount)
+                .currency(upperCurrency)
                 .qrString(qrString)
                 .customerName(customerName)
                 .customerEmail(email)
