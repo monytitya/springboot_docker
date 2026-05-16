@@ -11,6 +11,9 @@ import java.util.UUID;
 @Service
 public class KhqrService {
 
+    @Value("${bakong.api-url}")
+    private String apiUrl;
+
     @Value("${bakong.merchant-id}")
     private String merchantId;
 
@@ -21,6 +24,10 @@ public class KhqrService {
     private String merchantCity;
 
     public String generateKhqr(String transactionId, double amount, String currency) {
+        // Trim inputs to prevent hidden spaces from breaking the QR
+        String mId = merchantId != null ? merchantId.trim() : "";
+        String mName = merchantName != null ? merchantName.trim() : "Merchant";
+        String mCity = merchantCity != null ? merchantCity.trim() : "Phnom Penh";
         // Manual KHQR (EMVCo) Generation
         StringBuilder khqr = new StringBuilder();
         
@@ -33,7 +40,7 @@ public class KhqrService {
         // 29: Merchant Account Information (Bakong Individual)
         StringBuilder merchantAccount = new StringBuilder();
         merchantAccount.append(formatTag("00", "kh.com.bakong")); // Bakong GUID
-        merchantAccount.append(formatTag("01", merchantId));
+        merchantAccount.append(formatTag("01", mId));
         khqr.append(formatTag("29", merchantAccount.toString()));
         
         // 52: Merchant Category Code
@@ -44,16 +51,19 @@ public class KhqrService {
         khqr.append(formatTag("53", currencyCode));
         
         // 54: Transaction Amount
-        khqr.append(formatTag("54", String.format("%.2f", amount)));
+        String amountStr = "KHR".equalsIgnoreCase(currency) 
+            ? String.format("%.0f", amount) 
+            : String.format("%.2f", amount);
+        khqr.append(formatTag("54", amountStr));
         
         // 58: Country Code
         khqr.append(formatTag("58", "KH"));
         
         // 59: Merchant Name
-        khqr.append(formatTag("59", merchantName));
+        khqr.append(formatTag("59", mName));
         
         // 60: Merchant City
-        khqr.append(formatTag("60", merchantCity));
+        khqr.append(formatTag("60", mCity));
         
         // 62: Additional Data Field
         StringBuilder additionalData = new StringBuilder();
@@ -77,7 +87,7 @@ public class KhqrService {
         int crc = 0xFFFF;
         int polynomial = 0x1021;
 
-        for (byte b : input.getBytes()) {
+        for (byte b : input.getBytes(java.nio.charset.StandardCharsets.UTF_8)) {
             for (int i = 0; i < 8; i++) {
                 boolean bit = ((b >> (7 - i) & 1) == 1);
                 boolean c15 = ((crc >> 15 & 1) == 1);

@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PaymentRequest {
     private double amount;
-    private String currency; // USD or KHR
+    private String currency;
     private String orderId;
     private String customerName;
     private String email;

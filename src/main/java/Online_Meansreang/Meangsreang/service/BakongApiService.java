@@ -22,10 +22,12 @@ public class BakongApiService {
 
     public String checkTransactionStatus(String transactionId) {
         try {
-            // Bakong API usually uses /check_transaction or similar
-            // This is a placeholder for the actual Bakong API call
+            // Ensure no double slashes if apiUrl ends with /
+            String baseUrl = apiUrl.endsWith("/") ? apiUrl.substring(0, apiUrl.length() - 1) : apiUrl;
+            
+            // Bakong Open API endpoint for checking status by external reference
             Map response = webClient.post()
-                    .uri(apiUrl + "/v1/check_transaction")
+                    .uri(baseUrl + "/v1/check_transaction_by_external_ref")
                     .header("Authorization", "Bearer " + token)
                     .header("Content-Type", "application/json")
                     .bodyValue(Map.of("external_ref", transactionId))
@@ -35,8 +37,12 @@ public class BakongApiService {
 
             if (response != null && response.get("responseCode") != null && response.get("responseCode").toString().equals("0")) {
                 Map data = (Map) response.get("data");
-                if (data != null && "SUCCESS".equals(data.get("status"))) {
-                    return "SUCCESS";
+                if (data != null) {
+                    // Check both 'status' and 'transactionStatus' fields
+                    Object status = data.getOrDefault("status", data.get("transactionStatus"));
+                    if ("SUCCESS".equals(status)) {
+                        return "SUCCESS";
+                    }
                 }
             }
             return "PENDING";

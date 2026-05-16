@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class PaymentResponse {
     private String transactionId;
-    private String qrString; // raw KHQR string
+    private String qrString;
     private String qrImageBase64; // base64 PNG image
     private double amount;
     private String currency;

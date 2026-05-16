@@ -1,5 +1,18 @@
 package Online_Meansreang.Meangsreang.controller;
 
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import Online_Meansreang.Meangsreang.entity.Transaction;
 import Online_Meansreang.Meangsreang.model.PaymentRequest;
 import Online_Meansreang.Meangsreang.model.PaymentResponse;
@@ -8,12 +21,6 @@ import Online_Meansreang.Meangsreang.service.KhqrService;
 import Online_Meansreang.Meangsreang.service.TransactionService;
 import Online_Meansreang.Meangsreang.util.QrCodeUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/payment")
@@ -21,44 +28,42 @@ import java.util.Map;
 @Slf4j
 public class PaymentController {
 
-    @Autowired private KhqrService khqrService;
-    @Autowired private QrCodeUtil qrCodeUtil;
-    @Autowired private TransactionService transactionService;
-    @Autowired private BakongApiService bakongApiService;
+    @Autowired
+    private KhqrService khqrService;
+    @Autowired
+    private QrCodeUtil qrCodeUtil;
+    @Autowired
+    private TransactionService transactionService;
+    @Autowired
+    private BakongApiService bakongApiService;
 
-    // 1️⃣ Generate QR + Save to DB
     @PostMapping("/generate-qr")
     public ResponseEntity<PaymentResponse> generateQr(@RequestBody PaymentRequest request) {
         try {
             String transactionId = "TXN" + System.currentTimeMillis();
 
-            // Generate KHQR string
             String qrString = khqrService.generateKhqr(
-                transactionId, request.getAmount(), request.getCurrency()
-            );
+                    transactionId, request.getAmount(), request.getCurrency());
 
-            // Generate QR image
             String qrBase64 = qrCodeUtil.generateQrBase64(qrString, 300, 300);
 
-            // ✅ Save to PostgreSQL
             transactionService.createTransaction(
-                transactionId,
-                request.getAmount(),
-                request.getCurrency(),
-                qrString,
-                request.getCustomerName(),
-                request.getEmail(),
-                request.getPhone()
-            );
+                    transactionId,
+                    request.getAmount(),
+                    request.getCurrency(),
+                    qrString,
+                    request.getCustomerName(),
+                    request.getEmail(),
+                    request.getPhone());
 
             return ResponseEntity.ok(PaymentResponse.builder()
-                .transactionId(transactionId)
-                .qrString(qrString)
-                .qrImageBase64("data:image/png;base64," + qrBase64)
-                .amount(request.getAmount())
-                .currency(request.getCurrency())
-                .status("PENDING")
-                .build());
+                    .transactionId(transactionId)
+                    .qrString(qrString)
+                    .qrImageBase64("data:image/png;base64," + qrBase64)
+                    .amount(request.getAmount())
+                    .currency(request.getCurrency())
+                    .status("PENDING")
+                    .build());
 
         } catch (Exception e) {
             log.error("Error generating QR", e);
@@ -66,7 +71,6 @@ public class PaymentController {
         }
     }
 
-    // 2️⃣ Check Status + Update DB
     @GetMapping("/check-status/{transactionId}")
     public ResponseEntity<?> checkStatus(@PathVariable String transactionId) {
         String status = bakongApiService.checkTransactionStatus(transactionId);
@@ -76,24 +80,49 @@ public class PaymentController {
         }
 
         return ResponseEntity.ok(Map.of(
-            "transactionId", transactionId,
-            "status", status
-        ));
+                "transactionId", transactionId,
+                "status", status));
     }
 
     // 3️⃣ Bakong Webhook → Update DB
     @PostMapping("/callback")
     public ResponseEntity<String> handleCallback(@RequestBody Map<String, Object> payload) {
-        String transactionId = (String) payload.get("externalRef");
-        String status = (String) payload.get("status");
+        log.info("Received Bakong Callback: {}", payload);
 
-        if ("SUCCESS".equals(status)) {
-            transactionService.markAsSuccess(transactionId); // ✅ update DB
-        } else {
-            transactionService.markAsFailed(transactionId);
+        try {
+            // Bakong sometimes nests data in a "data" object
+            Map<String, Object> data = payload;
+            if (payload.containsKey("data") && payload.get("data") instanceof Map) {
+                data = (Map<String, Object>) payload.get("data");
+            }
+
+            // Extract externalRef (using safer String.valueOf to avoid ClassCastException)
+            Object externalRefObj = data.getOrDefault("externalRef", data.get("external_ref"));
+            String transactionId = externalRefObj != null ? String.valueOf(externalRefObj) : null;
+            
+            Object statusObj = data.get("status");
+            String status = statusObj != null ? String.valueOf(statusObj) : null;
+
+            if (transactionId == null) {
+                log.warn("Callback received without externalRef. Payload: {}", payload);
+                return ResponseEntity.badRequest().body("Error: Missing externalRef in payload");
+            }
+
+            if ("SUCCESS".equalsIgnoreCase(status)) {
+                transactionService.markAsSuccess(transactionId);
+                log.info("Successfully processed SUCCESS callback for transaction: {}", transactionId);
+            } else {
+                transactionService.markAsFailed(transactionId);
+                log.info("Processed FAILED/OTHER callback for transaction: {} (Status: {})", transactionId, status);
+            }
+
+            return ResponseEntity.ok("Callback Processed Successfully");
+
+        } catch (Exception e) {
+            log.error("Fatal error during Bakong callback processing", e);
+            // Return 200 with error details to avoid infinite retries from webhook provider
+            return ResponseEntity.ok("Warning: Callback received but processing failed: " + e.getMessage());
         }
-
-        return ResponseEntity.ok("OK");
     }
 
     // 4️⃣ Get All Transactions (admin view)

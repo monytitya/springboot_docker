@@ -37,6 +37,27 @@
             <artifactId>postgresql</artifactId>
             <scope>runtime</scope>
         </dependency>
+        <!-- Spring Web -->
+
+    <!-- Lombok -->
+
+    <dependency>
+        <groupId>com.google.zxing</groupId>
+        <artifactId>core</artifactId>
+        <version>3.5.2</version>
+    </dependency>
+    <dependency>
+        <groupId>com.google.zxing</groupId>
+        <artifactId>javase</artifactId>
+        <version>3.5.2</version>
+    </dependency>
+
+
+    <!-- WebFlux for HTTP calls -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-webflux</artifactId>
+    </dependency>
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -45,11 +66,7 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.8.6</version>
-        </dependency> -->
+        
        <dependency>
          <groupId>org.springdoc</groupId>
     <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
@@ -61,48 +78,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-        <!-- Spring Web -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-web</artifactId>
-    </dependency>
-
-    <!-- Lombok -->
-    <dependency>
-        <groupId>org.projectlombok</groupId>
-        <artifactId>lombok</artifactId>
-        <optional>true</optional>
-    </dependency>
-
-    <!-- QR Code Generator (ZXing) -->
-    <dependency>
-        <groupId>com.google.zxing</groupId>
-        <artifactId>core</artifactId>
-        <version>3.5.2</version>
-    </dependency>
-    <dependency>
-        <groupId>com.google.zxing</groupId>
-        <artifactId>javase</artifactId>
-        <version>3.5.2</version>
-    </dependency>
-    <dependency>
-    <groupId>org.springframework.boot</groupId>
-    <artifactId>spring-boot-starter-data-jpa</artifactId>
-</dependency>
-
-<!-- PostgreSQL Driver -->
-<dependency>
-    <groupId>org.postgresql</groupId>
-    <artifactId>postgresql</artifactId>
-    <scope>runtime</scope>
-</dependency>
-
-
-    <!-- WebFlux for HTTP calls -->
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-webflux</artifactId>
-    </dependency>
 
     </dependencies>
 
