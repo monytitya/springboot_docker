@@ -19,28 +19,22 @@ public class TransactionService {
     @Autowired
     private TransactionRepository transactionRepository;
 
-    // Save new transaction when QR is generated
     public Transaction createTransaction(String transactionId, Double amount,
-                                          String currency, String qrString,
-                                          String customerName, String email, String phone) {
-        
-        // ✅ 1. Validate Currency
+            String currency, String qrString,
+            String customerName, String email, String phone) {
+
         String upperCurrency = currency != null ? currency.toUpperCase() : "USD";
         if (!upperCurrency.equals("USD") && !upperCurrency.equals("KHR")) {
             throw new RuntimeException("Currency ត្រូវតែជា USD ឬ KHR!");
         }
 
-        // ✅ 2. Validate Amount
-        // Allow amount = 0 for "Unlocked" QRs
         double inputAmount = amount != null ? amount : 0.0;
         if (inputAmount < 0) {
             throw new RuntimeException("Amount មិនអាចតិចជាង 0 ទេ!");
         }
 
-        // ✅ 3. Auto Convert KHR → USD (Example rate 4100)
         double finalAmount = inputAmount;
         if (upperCurrency.equals("KHR") && inputAmount > 0) {
-            // If you want to store everything in USD internally
             finalAmount = inputAmount / 4100.0;
         }
 
@@ -60,7 +54,6 @@ public class TransactionService {
         return saved;
     }
 
-    // Update status to SUCCESS
     public Transaction markAsSuccess(String transactionId) {
         Transaction transaction = transactionRepository
                 .findByTransactionId(transactionId)
@@ -74,7 +67,6 @@ public class TransactionService {
         return updated;
     }
 
-    // Update status to FAILED
     public Transaction markAsFailed(String transactionId) {
         Transaction transaction = transactionRepository
                 .findByTransactionId(transactionId)
@@ -86,18 +78,15 @@ public class TransactionService {
         return updated;
     }
 
-    // Get transaction by ID
     public Optional<Transaction> getTransaction(String transactionId) {
         return transactionRepository.findByTransactionId(transactionId);
     }
 
-    // Get all transactions
     public List<Transaction> getAllTransactions() {
         return transactionRepository.findAll();
     }
 
-    // Expire pending transactions older than 15 minutes
-    @Scheduled(fixedRate = 60000) // runs every 1 minute
+    @Scheduled(fixedRate = 60000)
     public void expirePendingTransactions() {
         LocalDateTime expiryTime = LocalDateTime.now().minusMinutes(15);
         List<Transaction> expired = transactionRepository.findExpiredPendingTransactions(expiryTime);

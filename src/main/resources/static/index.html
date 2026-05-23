@@ -301,10 +301,15 @@
                     })
                 });
 
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(errorText || 'Server error ' + response.status);
+                }
+
                 const data = await response.json();
                 
-                if (data.qrImage) {
-                    document.getElementById('qr-image').src = 'data:image/png;base64,' + data.qrImage;
+                if (data.qrImageBase64) {
+                    document.getElementById('qr-image').src = data.qrImageBase64;
                     document.getElementById('input-phase').style.display = 'none';
                     document.getElementById('qr-phase').style.display = 'block';
                     activeTransactionId = data.transactionId;
@@ -312,7 +317,7 @@
                 }
             } catch (err) {
                 console.error(err);
-                alert('Failed to connect to server. Check if backend is running.');
+                alert('ERROR: ' + err.message);
             } finally {
                 btn.innerHTML = 'GENERATE QR CODE';
                 btn.disabled = false;

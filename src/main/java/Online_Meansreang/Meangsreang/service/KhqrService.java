@@ -18,47 +18,37 @@ public class KhqrService {
     @Value("${bakong.merchant-city}")
     private String merchantCity;
 
-    // ✅ Dynamic QR - User enters Amount & Currency in their app
     public String generateDynamicQR() {
         return generateKhqr("TXN" + System.currentTimeMillis(), 0.0, "USD");
     }
 
-    // ✅ Static QR - Locked amount and currency
     public String generateStaticQR(Double amount, String currency) {
         return generateKhqr("TXN" + System.currentTimeMillis(), amount, currency);
     }
 
     public String generateKhqr(String transactionId, Double amount, String currency) {
-        // 1. Sanitize all inputs (Remove quotes and non-standard characters)
         String mId = merchantId != null ? merchantId.trim().replace("\"", "") : "";
         String mName = merchantName != null ? merchantName.trim().replace("\"", "") : "Mao Tityamony";
         String mCity = merchantCity != null ? merchantCity.trim().replace("\"", "") : "Phnom Penh";
 
+        double inputAmount = (amount != null) ? amount : 0.0;
+
         StringBuilder khqr = new StringBuilder();
 
-        // 00: Payload Format Indicator
         khqr.append(formatTag("00", "01"));
 
-        // 01: Initiation Method
-        // 12 = Dynamic (Locked amount), 11 = Static (Unlocked amount)
-        double inputAmount = (amount != null) ? amount : 0.0;
-        String pointOfInitiation = (inputAmount > 0) ? "12" : "11";
-        khqr.append(formatTag("01", pointOfInitiation));
+        khqr.append(formatTag("01", "11"));
 
-        // 30: Individual Account Information (BEST for @bkrt accounts)
-        StringBuilder individualAccount = new StringBuilder();
-        individualAccount.append(formatTag("00", "kh.com.bakong")); // GUID
-        individualAccount.append(formatTag("01", mId));             // Your Bakong ID
-        khqr.append(formatTag("30", individualAccount.toString()));
+        StringBuilder merchantAccount = new StringBuilder();
+        merchantAccount.append(formatTag("00", "kh.com.bakong")); 
+        merchantAccount.append(formatTag("01", mId));
+        khqr.append(formatTag("29", merchantAccount.toString()));
 
-        // 52: Merchant Category Code (0000 = Personal)
         khqr.append(formatTag("52", "0000"));
 
-        // 53: Transaction Currency (840 = USD, 116 = KHR)
         String currencyCode = "USD".equalsIgnoreCase(currency) ? "840" : "116";
         khqr.append(formatTag("53", currencyCode));
 
-        // 54: Transaction Amount
         if (inputAmount > 0) {
             String amountStr = "KHR".equalsIgnoreCase(currency)
                     ? String.format("%.0f", inputAmount)
@@ -66,21 +56,16 @@ public class KhqrService {
             khqr.append(formatTag("54", amountStr));
         }
 
-        // 58: Country Code
         khqr.append(formatTag("58", "KH"));
 
-        // 59: Merchant Name (Force Uppercase for better bank matching)
-        khqr.append(formatTag("59", mName.toUpperCase()));
+        khqr.append(formatTag("59", mName.toUpperCase().replace(" ", "")));
 
-        // 60: Merchant City
-        khqr.append(formatTag("60", mCity));
+        khqr.append(formatTag("60", mCity.toUpperCase().replace(" ", "")));
 
-        // 62: Additional Data Field
         StringBuilder additionalData = new StringBuilder();
         additionalData.append(formatTag("01", transactionId)); // Bill Number
         khqr.append(formatTag("62", additionalData.toString()));
 
-        // 63: CRC
         khqr.append("6304");
         String crc = calculateCRC16(khqr.toString());
         khqr.append(crc);
